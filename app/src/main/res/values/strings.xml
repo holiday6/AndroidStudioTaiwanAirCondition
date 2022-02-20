@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Taiwan Air Condition</string>
+    <string name="site_textview">SITE : %s</string>
+    <string name="pm_textview">PM2.5 : %d</string>
+</resources>
