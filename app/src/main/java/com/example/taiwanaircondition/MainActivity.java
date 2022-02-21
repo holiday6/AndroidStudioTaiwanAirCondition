@@ -13,6 +13,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 
 import org.json.JSONArray;
@@ -27,25 +31,33 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
 
 public class MainActivity extends AppCompatActivity {
 
+    Spinner spinner;
+
     final String airConditionUrl = "https://data.epa.gov.tw/api/v1/aqx_p_02?limit=1000&api_key=9be7b239-557b-4c10-9775-78cadfc555e9&sort=ImportDate%20desc&format=json";
     // 存放各縣市的PM資料 key = country
     Map countryMap = new HashMap<String, ArrayList<MetaData>>();
+    List spinnerList = new ArrayList();
     String countryName = "新北市";
 
+    RecyclerView recyclerView;
+    MyAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        recyclerView = findViewById(R.id.recyclerView);
         cacheData();
     }
+
+
 
     private void cacheData() {
         ProgressDialog dialog = ProgressDialog.show(this, getString(R.string.wait_dialog_title), getString(R.string.wait_dialog_msg), true);
@@ -69,7 +81,8 @@ public class MainActivity extends AppCompatActivity {
                     siteJsonObject = jsonArray.getJSONObject(i);
                     String county = siteJsonObject.getString("county");
                     if(!countryMap.containsKey(county)) {
-                        countryMap.put(siteJsonObject.getString("county"), new ArrayList<MetaData>());
+                        countryMap.put(county, new ArrayList<MetaData>());
+                        spinnerList.add(county);
                     }
                     ArrayList list = (ArrayList) countryMap.get(county);
                     list.add(new MetaData(siteJsonObject.getString("Site"),siteJsonObject.getInt("PM25")));
@@ -78,12 +91,24 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(()->{
                     dialog.dismiss();
 
-                    RecyclerView recyclerView = findViewById(R.id.recyclerView);
-                    MyAdapter adapter = new MyAdapter();
+                    spinner = findViewById(R.id.spinner);
+                    ArrayAdapter arrayAdapter = new ArrayAdapter(this, androidx.appcompat.R.layout.support_simple_spinner_dropdown_item, spinnerList);
+                    spinner.setAdapter(arrayAdapter);
+                    spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                        @Override
+                        public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                            countryName = adapterView.getSelectedItem().toString();
+                            adapter = new MyAdapter();
+                            recyclerView.setLayoutManager(new LinearLayoutManager(adapterView.getContext()));
+                            recyclerView.addItemDecoration(new DividerItemDecoration(adapterView.getContext(), DividerItemDecoration.VERTICAL));
+                            recyclerView.setAdapter(adapter);
+                        }
 
-                    recyclerView.setLayoutManager(new LinearLayoutManager(this));
-                    recyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
-                    recyclerView.setAdapter(adapter);
+                        @Override
+                        public void onNothingSelected(AdapterView<?> adapterView) {
+
+                        }
+                    });
                 });
 
             } catch (MalformedURLException e) {
@@ -154,6 +179,8 @@ public class MainActivity extends AppCompatActivity {
             return siteList.size();
         }
     }
+
+
 
     private class MetaData {
         public String site;
