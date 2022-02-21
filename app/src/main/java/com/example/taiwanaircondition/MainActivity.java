@@ -2,8 +2,12 @@ package com.example.taiwanaircondition;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.annotation.SuppressLint;
+import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -39,9 +43,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        cacheData();
     }
 
     private void cacheData() {
+        ProgressDialog dialog = ProgressDialog.show(this, getString(R.string.wait_dialog_title), getString(R.string.wait_dialog_msg), true);
         new Thread(()->{
             try {
                 URL url = new URL(airConditionUrl);
@@ -57,9 +64,27 @@ public class MainActivity extends AppCompatActivity {
 
                 JSONObject jsonObjectAll = new JSONObject(String.valueOf(json));
                 JSONArray jsonArray = jsonObjectAll.getJSONArray("records");
+                JSONObject siteJsonObject;
                 for(int i=0;i<jsonArray.length();i++) {
-
+                    siteJsonObject = jsonArray.getJSONObject(i);
+                    String county = siteJsonObject.getString("county");
+                    if(!countryMap.containsKey(county)) {
+                        countryMap.put(siteJsonObject.getString("county"), new ArrayList<MetaData>());
+                    }
+                    ArrayList list = (ArrayList) countryMap.get(county);
+                    list.add(new MetaData(siteJsonObject.getString("Site"),siteJsonObject.getInt("PM25")));
                 }
+
+                runOnUiThread(()->{
+                    dialog.dismiss();
+
+                    RecyclerView recyclerView = findViewById(R.id.recyclerView);
+                    MyAdapter adapter = new MyAdapter();
+
+                    recyclerView.setLayoutManager(new LinearLayoutManager(this));
+                    recyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
+                    recyclerView.setAdapter(adapter);
+                });
 
             } catch (MalformedURLException e) {
                 e.printStackTrace();
@@ -76,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
 
     private class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
 
-        ArrayList<MetaData> siteList;
+        ArrayList<MetaData> siteList = (ArrayList) countryMap.get(countryName);;
 
         public class ViewHolder extends RecyclerView.ViewHolder {
             TextView tvSite, tvPm;
@@ -96,9 +121,32 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            siteList = (ArrayList) countryMap.get(countryName);
             holder.tvSite.setText(getString(R.string.site_textview, siteList.get(position).site));
-            holder.tvPm.setText(getString(R.string.pm_textview, siteList.get(position).pm));
+            int pm = siteList.get(position).pm;
+            holder.tvPm.setText(getString(R.string.pm_textview, pm));
+            int color;
+            if(pm < 12) {
+                color = R.color.green_0;
+            }else if(pm < 23) {
+                color = R.color.green_1;
+            }else if(pm < 36) {
+                color = R.color.green_2;
+            }else if(pm < 42) {
+                color = R.color.yellow_0;
+            }else if(pm < 48) {
+                color = R.color.yellow_1;
+            }else if(pm < 54) {
+                color = R.color.yellow_2;
+            }else if(pm < 59) {
+                color = R.color.red_0;
+            }else if(pm < 65) {
+                color = R.color.red_1;
+            }else if(pm < 71) {
+                color = R.color.red_2;
+            }else {
+                color = R.color.purple_700;
+            }
+            holder.itemView.setBackgroundColor(getResources().getColor(color));
         }
 
         @Override

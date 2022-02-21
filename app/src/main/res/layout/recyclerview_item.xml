@@ -9,13 +9,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:text="@string/site_textview" />
+        android:text="@string/site_textview"
+        android:textSize="48sp" />
 
     <TextView
         android:id="@+id/pm_view_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:text="@string/pm_textview" />
+        android:text="@string/pm_textview"
+        android:textSize="48sp" />
 
 </LinearLayout>

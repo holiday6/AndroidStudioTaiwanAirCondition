@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">Taiwan Air Condition</string>
-    <string name="site_textview">SITE : %s</string>
-    <string name="pm_textview">PM2.5 : %d</string>
+    <string name="site_textview">%s</string>
+    <string name="pm_textview">%d μg/m3</string>
+    <string name="wait_dialog_title">Reading Data</string>
+    <string name="wait_dialog_msg">Please Wait ...</string>
 </resources>
