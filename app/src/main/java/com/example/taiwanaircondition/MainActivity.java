@@ -85,7 +85,11 @@ public class MainActivity extends AppCompatActivity {
                         spinnerList.add(county);
                     }
                     ArrayList list = (ArrayList) countryMap.get(county);
-                    list.add(new MetaData(siteJsonObject.getString("Site"),siteJsonObject.getInt("PM25")));
+                    String pm = siteJsonObject.getString("PM25");
+                    if(pm.isEmpty()) {
+                        pm = "-1";
+                    }
+                    list.add(new MetaData(siteJsonObject.getString("Site"),Integer.parseInt(pm)));
                 }
 
                 runOnUiThread(()->{
@@ -148,7 +152,12 @@ public class MainActivity extends AppCompatActivity {
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             holder.tvSite.setText(getString(R.string.site_textview, siteList.get(position).site));
             int pm = siteList.get(position).pm;
-            holder.tvPm.setText(getString(R.string.pm_textview, pm));
+            if(pm != -1) {
+                holder.tvPm.setText(getString(R.string.pm_textview, pm));
+            }else {
+                holder.tvPm.setText("No Data");
+            }
+
             int color;
             if(pm < 12) {
                 color = R.color.green_0;
